@@ -1,0 +1,1719 @@
+[
+    {
+        "id": "eb14d871.d82a88",
+        "type": "tab",
+        "label": "Location API",
+        "disabled": false,
+        "info": "# Meraki Location Scanning API \n\nThis flow demonstrates the basic mechanics of\nthe Scanning API web service. It will provide\ntwo API endpoints to interact with the Meraki API.\n\n`[get] /scanning`\nResponds to Meraki with the `validator` to \nvalidate the receiver.\n\n`[post] /scanning`\nReceives observation data from a Meraki AP. \nThe data is compared against the `secret` to\nvalidate the sender.\n\nA **link** node is then used to demonstrate how the\ndata can be analyzed and routed. \n\nIt is now up to you to do something awesome with\nthis information. Add a map, database or IoT\ncontrol...\n\nhttp://developers.meraki.com\nhttp://www.InternetOfLEGO.com\n\n"
+    },
+    {
+        "id": "8b7d1426.191098",
+        "type": "tab",
+        "label": "Captive Portal",
+        "disabled": false,
+        "info": "# Meraki External Captive Portal (ExCap)\n\nThis flow demonstrates the mechanics of working\nwith the Meraki Captive Portal API. \n\nThere are two \"Splash Page\" types with Meraki, \n**Click-through** and **Sign on**.\n\nThere are two flows to highlight the differences\nbut they may share common assets, such as a ToS.\n\n# Overview\n\n## Click-through\nThe click-through splash page simply expects\nto receive a request from Meraki which includes\nthe parameters of the authenticating client. It\nwill then parse the parameters, present a splash\npage and eventually redirect the client to \nthe `base_grant_url` once the form is submitted\n\n`[get] /excapClick`\nThe path Meraki will use as the **Custom Splash \nURL**\nThe client will see the splash page, which is \nprovided by the **HTML (template)** node.\n\n`[post] /excapClickLogin`\nThe URL that will be the web form's \"Action\".\nIt will then send the user form data to the flow\nand redirect the client to the `base_grant_url`.\n\n\n## Sign On\n\n`[get] /excapSignOn`\nThe path Meraki will use as the **Custom Splash\nURL**\nThe client will see the splash page, which is \nprovided by the **HTML (template)** node.\nThe form will include a Meraki provided `login_url`, which will\nbe set as the \"Action\" on the web form.\n\n`[post] /excapSuccess`\nThis path Meraki will use as the continue_url\nfor the client once they have succesfully logged\nin. Use this to have a final interaction with the\nclient.\n\n\n# Usage\n\nLogin to Meraki Dashboard and configure the \ncustom Splash Page URL to one of these methods.\n* http://yourserver:1880/excapClick\n* http://yourserver:1880/excapSignOn\n\nIf using Sign On, you must also configure WiFi \nUser accounts that are authorized for the SSID.\n\n# More Info\n\nhttps://meraki.cisco.com/lib/pdf/meraki_whitepaper_captive_portal.pdf\nhttp://developers.meraki.com\nhttp://www.InternetOfLEGO.com\n\n\n"
+    },
+    {
+        "id": "b183d48e.4f3bf8",
+        "type": "tab",
+        "label": "Dashboard API - Admin Form",
+        "disabled": false,
+        "info": "# Dashboard API - Admin Form\nA flow to create and administrator for a\nMeraki network. \n\n## Configure\n* Update the Environment Variables node\n**Env Variables: UPDATE THIS**\n\nYour API KEY (Keep this secret. Do not publish)\n```\nconst API_KEY = 'YourAPIKey'; \n```\n\nYour Shard number. https://n149.meraki.com , \nwhere n149 represent the shard number. \nYou can see this URL when you login to your Meraki Dashboard.\nThis is defined to avoid redirect issues.\n```\nvar shard = 'n149'; \n```\nYour Default Organization ID (optional)\n```\nvar orgId = ''; \n```\n\n# Usage\n\n`[get /meraki/admins]`\nPresents the web form.\n\nNavigate to\n* http://localhost:1880/meraki/admins\n\n\n# Verify\nIf the user was created properly, the web page\nwill display the committed details. You can\nverify the account in the Meraki Dashboard\n\n# More Info\n\nhttp://developers.meraki.com\nhttp://www.InternetOfLEGO.com\n\n\n\n\n\n\n\n\n\nThis flow can be adjusted to\nleaverage the many other API endpoints available.\n"
+    },
+    {
+        "id": "e1f94d4.d4632b",
+        "type": "tab",
+        "label": "Cisco Spark",
+        "disabled": false,
+        "info": "# Cisco Spark API Demo\nCollects data from **input** nodes and sends it\nto a Spark room.\n\n# Configure\nUpdate the **function** node \"Spark Send Message (API) - UPDATE\"\n* Set Your Variables\n**Your Access Token**\n```\nvar accessToken = \"EnterYourAccessTokenHere\";\n```\n**Your Room ID**\n```\nvar roomId = \"EnterYourRoomIDHere\";\n```\n\n# Usage\nThe link nodes from other flows can be sent to \nthe \"Cisco Spark\" **link in* node. As messages\narrive, they will be sent to the Spark room. The\nmessages will typically be formatted before sending\nto adjust for the Spark message room layout.\n\n# More Info\n\nLearn about getting an accessToken and using their \nonline API console to obtain the roomId.\nhttps://developer.ciscospark.com/\n\nhttps://developer.ciscospark.com/"
+    },
+    {
+        "id": "1dc6c26c.db105e",
+        "type": "debug",
+        "z": "eb14d871.d82a88",
+        "name": "scanning Data",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 620,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "ae74c7da.16a988",
+        "type": "http in",
+        "z": "eb14d871.d82a88",
+        "name": "",
+        "url": "/scanning",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 120,
+        "wires": [
+            [
+                "2faa31b9.754bbe",
+                "dfa00936.541968"
+            ]
+        ]
+    },
+    {
+        "id": "2faa31b9.754bbe",
+        "type": "function",
+        "z": "eb14d871.d82a88",
+        "name": "validate-validator - UPDATE",
+        "func": "\n//Set the validator variable to match the Meraki network\n//The URL will not need to include the validator string, for enhanced security\n//~~~~~~~~~\nvalidator = \"yourValidatorKey\";\n\n// For testing purposes:\n// This validator accepts a message with the validator defined in the URL\n// Example: http://yourserver:1880/cmx?validator=8e0846499d9a3f6d23f7868c4d55b9d6325035f5\n\n//~~~~~~~~~\n//validator = msg.payload.validator;\n\n\nmsg.payload = validator;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 360,
+        "y": 120,
+        "wires": [
+            [
+                "2ee33556.fd42ea",
+                "89baef9d.b6428"
+            ]
+        ]
+    },
+    {
+        "id": "2ee33556.fd42ea",
+        "type": "http response",
+        "z": "eb14d871.d82a88",
+        "name": "scanning response",
+        "statusCode": "",
+        "headers": {},
+        "x": 610,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "dfa00936.541968",
+        "type": "debug",
+        "z": "eb14d871.d82a88",
+        "name": "scanning validator raw",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 340,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "2d19fca8.c04594",
+        "type": "comment",
+        "z": "eb14d871.d82a88",
+        "name": "Location API core mechanics",
+        "info": "CMX/Location API core functions",
+        "x": 140,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "89baef9d.b6428",
+        "type": "debug",
+        "z": "eb14d871.d82a88",
+        "name": "scanning Validator",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 610,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "f65789c5.ba80f8",
+        "type": "function",
+        "z": "eb14d871.d82a88",
+        "name": "validate-secret - UPDATE",
+        "func": "// This node verifies that the secrect configured\n// on the Meraki Dashboard Network, matches.\n//var secret = \"merakilous\"; \nvar secret = \"supersecret\";\n\nif(msg.payload.secret == secret){\n    return msg;\n}else{\n    // Secret is invalid\n    \n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 350,
+        "y": 220,
+        "wires": [
+            [
+                "1dc6c26c.db105e",
+                "a8928be5.b209c8",
+                "c332bb33.776ee8"
+            ]
+        ]
+    },
+    {
+        "id": "1e6cb2e3.d893cd",
+        "type": "debug",
+        "z": "eb14d871.d82a88",
+        "name": "scanning post",
+        "active": false,
+        "console": "false",
+        "complete": "payload",
+        "x": 320,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "a8928be5.b209c8",
+        "type": "http response",
+        "z": "eb14d871.d82a88",
+        "name": "cmx response",
+        "x": 600,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "f5740b86.1910c8",
+        "type": "comment",
+        "z": "eb14d871.d82a88",
+        "name": "Meraki Location API - Using Native Nodes -- README",
+        "info": "This flow demonstrates how to interact with the\nMeraki CMX (Scanning) Location API.\n\n# Be sure to update the validator and secret\n\nThe \"CMX core functions\" consist of two REST endpoints.\nThe 'get' enpoint waits to hear from Meraki,\nwhich will send a request to this server. The flow will \nthen respond with the \"validator\", which was defined in \nthe Meraki Dashboard. If the correct validator is returned, \nMeraki has confirmed that it is sending location data to \nthe correct server.\n\nThe second enpoint accepts 'post' requests, which will\nbe receiving the JSON structured location data from Meraki.\n\nOnce the data has arrived in the `msg.payload`, the results\nwill be stored in a local MongoDB database if the supplied secret\nmatches what's defined in the global variables. This is to ensure\nthat it is in fact Meraki sending this data. \n\nThe data can then be retrieved by opening the other 'get' endpoints, such \nas /showcmxNative.\n\n",
+        "x": 461,
+        "y": 27,
+        "wires": []
+    },
+    {
+        "id": "f700fd99.7acdc",
+        "type": "debug",
+        "z": "8b7d1426.191098",
+        "name": "excapSignOn raw data",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 200,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "11ae2556.76422b",
+        "type": "http in",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "url": "/excapSignOn",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 440,
+        "wires": [
+            [
+                "f700fd99.7acdc",
+                "42277078.1a864"
+            ]
+        ]
+    },
+    {
+        "id": "f706fa96.b699b8",
+        "type": "http response",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "x": 770,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "6d8aaaf1.db0514",
+        "type": "http in",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "url": "/excapClick",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 120,
+        "wires": [
+            [
+                "4e75f3a0.020c7c",
+                "52031389.60cefc"
+            ]
+        ]
+    },
+    {
+        "id": "a4bcd410.8d34e8",
+        "type": "http response",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "x": 770,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "402303ef.93bfac",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "HTML Login Page",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<!DOCTYPE html>\n<html>\n<head>\n{{{payload.css}}}\n\n\n    <meta charset=\"utf-8\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n    <title>Registration Form</title>\n\n</head>\n<body>\n\n    \n\n\n    <div class=\"main-content\">\n    <form class=\"form-register\" method=POST action={{payload.login_url}} />\n        <input type=\"hidden\" name=\"continue_url\" value={{payload.continue_url}} />\n        <input type=\"hidden\" name=\"host\" value ={{host}}>\n        <input type=\"hidden\" name=\"base_grant_url\" value = {{payload.base_grant_url}}/>\n        <input type=\"hidden\" name=\"user_continue_url\" value = {{payload.user_continue_url}}/>\n        <input type=\"hidden\" name=\"node_mac\" value = {{payload.node_mac}}/>\n        <input type=\"hidden\" name=\"client_ip\" value = {{payload.client_ip}}/>\n        <input type=\"hidden\" name=\"client_mac\" value = {{payload.client_mac}}/>\n        <input type=\"hidden\" name=\"success_url\" value={{payload.continue_url}} />\n\n            <div class=\"form-register-with-email\">\n\n                <div class=\"form-white-background\">\n\n                    <div class=\"form-title-row\">\n                        <h1>Login to WiFi</h1>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <label>\n                            <span>Email</span>\n                            <input type=\"email\" name=\"email\" required>\n                        </label>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <label>\n                            <span>Password</span>\n                            <input type=\"password\" name=\"password\" required>\n                        </label>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <label class=\"form-checkbox\">\n                            <input type=\"checkbox\" name=\"checkbox\" checked value=\"accepted\" required>\n                            <span>I agree to the <a href=\"/excapTerms\" target\"_blank\">terms and conditions</a></span>\n                        </label>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <button type=\"submit\">Register</button>\n                    </div>\n\n                </div>\n\n            </div>\n\n            <!-- Future Social Features\n            <div class=\"form-sign-in-with-social\">\n\n                <div class=\"form-row form-title-row\">\n                    <span class=\"form-title\">Sign in with</span>\n                </div>\n\n                <a href=\"#\" class=\"form-google-button\">Google</a>\n                <a href=\"#\" class=\"form-facebook-button\">Facebook</a>\n                <a href=\"#\" class=\"form-twitter-button\">Twitter</a>\n                \n\n            </div>\n            -->\n\n        </form>\n                Your IP: {{payload.client_ip}}\n                <br>\n                Your MAC: {{payload.client_mac}}\n\n    </div>\n\n</body>\n\n</html>",
+        "x": 570,
+        "y": 480,
+        "wires": [
+            [
+                "a4bcd410.8d34e8"
+            ]
+        ]
+    },
+    {
+        "id": "4e75f3a0.020c7c",
+        "type": "function",
+        "z": "8b7d1426.191098",
+        "name": "Set login_url",
+        "func": "msg.payload.login_url = msg.payload.base_grant_url + '?continue_url=' + msg.payload.user_continue_url;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 330,
+        "y": 120,
+        "wires": [
+            [
+                "b7671b4a.50e0f8"
+            ]
+        ]
+    },
+    {
+        "id": "52031389.60cefc",
+        "type": "debug",
+        "z": "8b7d1426.191098",
+        "name": "excapClick raw data",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 200,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "30b40964.ee4a66",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Meraki Click-through, read more...",
+        "info": "Configure by placing this host server address\nfollowed by /excapClick in the Custom Splash Page URL\nsection of the Meraki Dashboard.\n\nie. https://yourserver:1880/excapClick\n\nBe sure to update the \"walled garden\" in the \nMeraki Dashboard with the IP address of your \nserver and any other resources required before\nlogin, such as your website, images, CSS, etc.\n\nThe HTML page can be modified as needed. \n",
+        "x": 173,
+        "y": 79,
+        "wires": []
+    },
+    {
+        "id": "612ae4fe.836cfc",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Meraki Sign-on, read more...",
+        "info": "Configure by placing this host server address\nfollowed by /excapClick in the Custom Splash Page URL\nsection of the Meraki Dashboard.\n\nie. https://yourserver:1880/excapSignOn\n\nBe sure to update the \"walled garden\" in the \nMeraki Dashboard with the IP address of your \nserver and any other resources required before\nlogin, such as your website, images, CSS, etc.\n\n",
+        "x": 159,
+        "y": 396,
+        "wires": []
+    },
+    {
+        "id": "e2418d96.a8aff",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "HTML Splash Page",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<!DOCTYPE html>\n<html>\n<head>\n{{{payload.css}}}\n\n\n\t<meta charset=\"utf-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n\t<title>Registration Form</title>\n\n</head>\n<body>\n\n\t\n\n\n    <div class=\"main-content\">\n\n        <form class=\"form-register\" method=POST action=\"/excapClickLogin\">\n                <input type=\"hidden\" name=\"continue_url\" value={{payload.continue_url}} />\n                <input type=\"hidden\" name=\"host\" value ={{host}}>\n                <input type=\"hidden\" name=\"base_grant_url\" value = {{payload.base_grant_url}}/>\n                <input type=\"hidden\" name=\"user_continue_url\" value = {{payload.user_continue_url}}/>\n                <input type=\"hidden\" name=\"node_mac\" value = {{payload.node_mac}}/>\n                <input type=\"hidden\" name=\"client_ip\" value = {{payload.client_ip}}/>\n                <input type=\"hidden\" name=\"client_mac\" value = {{payload.client_mac}}/>\n            \n            <div class=\"form-register-with-email\">\n\n                <div class=\"form-white-background\">\n\n                    <div class=\"form-title-row\">\n                        <h1>Login to WiFi</h1>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <label>\n                            <span>Name</span>\n                            <input type=\"text\" name=\"name\" required>\n                        </label>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <label>\n                            <span>Email</span>\n                            <input type=\"email\" name=\"email\" required>\n                        </label>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <label class=\"form-checkbox\">\n                            <input type=\"checkbox\" name=\"checkbox\" checked value=\"accepted\" required>\n                            <span>I agree to the <a href=\"/excapTerms\" target\"_blank\">terms and conditions</a></span>\n                        </label>\n                    </div>\n\n                    <div class=\"form-row\">\n                        <button type=\"submit\">Register</button>\n                    </div>\n\n                </div>\n\n            </div>\n\n            <!-- Future Social Features\n            <div class=\"form-sign-in-with-social\">\n\n                <div class=\"form-row form-title-row\">\n                    <span class=\"form-title\">Sign in with</span>\n                </div>\n\n                <a href=\"#\" class=\"form-google-button\">Google</a>\n                <a href=\"#\" class=\"form-facebook-button\">Facebook</a>\n                <a href=\"#\" class=\"form-twitter-button\">Twitter</a>\n                \n\n            </div>\n            -->\n\n        </form>\n                Your IP: {{payload.client_ip}}\n                <br>\n                Your MAC: {{payload.client_mac}}\n\n    </div>\n\n</body>\n\n</html>\n\n",
+        "x": 570,
+        "y": 160,
+        "wires": [
+            [
+                "f706fa96.b699b8"
+            ]
+        ]
+    },
+    {
+        "id": "aba9eeaa.48fc7",
+        "type": "http in",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "url": "/excapClickLogin",
+        "method": "post",
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 220,
+        "wires": [
+            [
+                "bf9f8b70.0d4fc8",
+                "ac5dc188.08fe",
+                "c94be374.17436"
+            ]
+        ]
+    },
+    {
+        "id": "bf9f8b70.0d4fc8",
+        "type": "function",
+        "z": "8b7d1426.191098",
+        "name": "Process login with 302 redirect",
+        "func": "// check if client has connected properly and received response from AP\nif (msg.payload.base_grant_url){\n    msg.statusCode = 302;\n    msg.headers = {\n      'Location': msg.payload.base_grant_url + '?continue_url=' + msg.payload.user_continue_url\n      //add other headers here...\n    };\n}else{\n    // error: send client back to login\n    msg.statusCode = 302;\n    msg.headers = {\n      'Location': '/excapNotConnected'\n      //add other headers here...\n    };\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 530,
+        "y": 220,
+        "wires": [
+            [
+                "c2d3819a.34362",
+                "b89f2696.c532b8"
+            ]
+        ]
+    },
+    {
+        "id": "c2d3819a.34362",
+        "type": "http response",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "x": 770,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "ac5dc188.08fe",
+        "type": "debug",
+        "z": "8b7d1426.191098",
+        "name": "excapClick Login data",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 200,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "e0854955.49dd88",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Store form data - read more...",
+        "info": "The login data now can be sent somehwere to be \nlogged. A link node is attached to easily use\nthis data in other parts of the flow.",
+        "x": 500,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "1163c3cc.52bf0c",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Terms and Conditions",
+        "info": "",
+        "x": 144,
+        "y": 750,
+        "wires": []
+    },
+    {
+        "id": "6424bd9b.1233e4",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Success",
+        "info": "",
+        "x": 106,
+        "y": 538,
+        "wires": []
+    },
+    {
+        "id": "4b414af6.1ad994",
+        "type": "http in",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "url": "/excapTerms",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 800,
+        "wires": [
+            [
+                "11fa0bce.4d8b04"
+            ]
+        ]
+    },
+    {
+        "id": "90af1fec.c47a6",
+        "type": "http response",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "x": 790,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "60902bb6.127824",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "HTML Terms and Conditions",
+        "field": "payload",
+        "format": "handlebars",
+        "template": "<head>\n    <title>Terms and Conditions</title>\n{{{payload}}}\n</head>\n<body>\n    <div class=\"container\">\n    <h1>Terms and Conditions</h1>\n    <ul>\n        <li>Please use our network responsibly. </li>\n        <li>Your computer's MAC and IP address will be logged.</li>\n    </ul>\n    </div>\n</body>\n\n\n",
+        "x": 600,
+        "y": 840,
+        "wires": [
+            [
+                "90af1fec.c47a6"
+            ]
+        ]
+    },
+    {
+        "id": "28a59d41.70ea32",
+        "type": "http in",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "url": "/excapSuccess",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 580,
+        "wires": [
+            [
+                "45b70f78.1e904"
+            ]
+        ]
+    },
+    {
+        "id": "6d193531.803bbc",
+        "type": "http response",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "x": 790,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "bedb0afb.ec5078",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "HTML Success",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<head>\n    <title>Success!</title>\n{{{payload.css}}}\n</head>\n<body>\n    <div class=\"container\">\n    <center><h1>Success!</h1>\n    <h2>You can now use the network.</h2>\n    </center>\n    </div>\n</body>\n\n\n",
+        "x": 560,
+        "y": 620,
+        "wires": [
+            [
+                "6d193531.803bbc"
+            ]
+        ]
+    },
+    {
+        "id": "f2987bd9.985f98",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Error: Not connected to AP",
+        "info": "",
+        "x": 160,
+        "y": 873,
+        "wires": []
+    },
+    {
+        "id": "398ac7b.0258038",
+        "type": "http in",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "url": "/excapNotConnected",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 920,
+        "wires": [
+            [
+                "4132aed4.de20c"
+            ]
+        ]
+    },
+    {
+        "id": "d2817e7e.7567e",
+        "type": "http response",
+        "z": "8b7d1426.191098",
+        "name": "",
+        "x": 790,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "c9c1800c.4903e",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "HTML Terms and Conditions",
+        "field": "payload",
+        "format": "handlebars",
+        "template": "<head>\n    <title>Error: Not Connected</title>\n{{{payload}}}\n</head>\n<body>\n    <div class=\"container\">\n    <h1>Error: Not Connected</h1>\n    <p>\n        Hmm, somethings not right. It appears you\n        are not connected to the correct wireless network.\n    </p>\n    </div>\n</body>\n\n\n",
+        "x": 600,
+        "y": 960,
+        "wires": [
+            [
+                "d2817e7e.7567e"
+            ]
+        ]
+    },
+    {
+        "id": "b4858781.ed3048",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Cisco Meraki ExCap Service",
+        "info": "More information about the Meraki ExCap API:\nhttps://meraki.cisco.com/lib/pdf/meraki_whitepaper_captive_portal.pdf\n\nEnjoy!\n\nWritten by Cory Guynn, 2015.\nConsulting Engineer @ https://meraki.cisco.com/\nTechnical Blogger @ http://www.InternetOfLego.com",
+        "x": 438.5,
+        "y": 31,
+        "wires": []
+    },
+    {
+        "id": "b7671b4a.50e0f8",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "CSS Style",
+        "field": "payload.css",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<style>\nhtml{\n    background-color: #f3f3f3;\n}\n\n.form-register{\n    max-width: 1000px;\n    width: 100%;\n    margin: 0 auto;\n\n    font: bold 14px sans-serif;\n    text-align: center;\n}\n\n.form-register-with-email{\n    position: relative;\n    display: inline-block;\n    vertical-align: top;\n    margin-right: 130px;\n    text-align: center;\n}\n\n.form-register-with-email .form-white-background{\n    width: 570px;\n    box-sizing: border-box;\n    background-color: #ffffff;\n    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);\n    padding: 60px 80px;\n    margin-bottom: 35px;\n}\n\n.form-register-with-email .form-row{\n    text-align: left;\n    margin-bottom: 23px;\n}\n\n.form-register-with-email .form-title-row{\n    text-align: center;\n    margin-bottom: 50px;\n}\n\n.form-register-with-email h1{\n    display: inline-block;\n    box-sizing: border-box;\n    color:  #4c565e;\n    font-size: 24px;\n    padding: 0 20px 15px;\n    border-bottom: 2px solid #6caee0;\n    margin: 0;\n}\n\n.form-register-with-email .form-row > label span{\n    display: inline-block;\n    box-sizing: border-box;\n    color:  #5f5f5f;\n    width: 125px;\n    text-align: right;\n    padding-right: 25px;\n}\n\n.form-register-with-email input{\n    color:  #5f5f5f;\n    box-sizing: border-box;\n    width: 230px;\n    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);\n    padding: 12px 18px;\n    border: 1px solid #dbdbdb;\n}\n\n.form-register-with-email .form-checkbox input{\n    margin-left: 128px;\n    margin-right: 10px;\n    width: auto;\n    vertical-align: top;\n}\n\n.form-register-with-email .form-row .form-checkbox span{\n    font-size: 12px;\n    font-weight: normal;\n    display: inline-block;\n    text-align: left;\n    width: 220px;\n    margin: 0;\n}\n\n.form-register-with-email .form-checkbox span a{\n    text-decoration: none;\n    color:  #6caee0;\n}\n\n.form-register-with-email button{\n    display: block;\n    border-radius: 2px;\n    background-color:  #6caee0;\n    color: #ffffff;\n    font-weight: bold;\n    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);\n    padding: 15px 35px;\n    border: 0;\n    margin: 55px auto 0;\n    cursor: pointer;\n}\n\n.form-register-with-email .form-log-in-with-existing{\n    text-decoration: none;\n    padding: 4px 8px;\n    font-weight: normal;\n    color: #7b9d62;\n    background-color: #d6f0c3;\n}\n\n\n.form-sign-in-with-social{\n    display: inline-block;\n    max-width: 180px;\n    box-sizing: border-box;\n    vertical-align: top;\n    text-align: center;\n    margin-top: 100px;\n}\n\n.form-sign-in-with-social .form-title-row{\n    margin-bottom: 50px;\n}\n\n.form-sign-in-with-social .form-title{\n    box-sizing: border-box;\n    color:  #4c565e;\n    font-size: 24px;\n    padding: 15px 20px;\n    border-bottom: 2px solid #6caee0;\n}\n\n.form-sign-in-with-social .form-google-button{\n    color:  #ffffff;\n    display: block;\n    width: 145px;\n    height: 40px;\n    font-size: 12px;\n    line-height: 40px;\n    background-color:  rgba(222, 110, 60, 0.9);\n    box-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.08);\n    border-radius: 2px;\n    margin: 8px auto;\n    text-decoration: none;\n}\n\n.form-sign-in-with-social .form-facebook-button{\n    color:  #ffffff;\n    display: block;\n    width: 145px;\n    height: 40px;\n    font-size: 12px;\n    line-height: 40px;\n    background-color:  rgba(75, 136, 194, 0.9);\n    box-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.08);\n    border-radius: 2px;\n    margin: 8px auto;\n    text-decoration: none;\n}\n\n.form-sign-in-with-social .form-twitter-button{\n    color:  #ffffff;\n    display: block;\n    width: 145px;\n    height: 40px;\n    font-size: 12px;\n    line-height: 40px;\n    background-color:  rgba(123, 195, 226, 0.9);\n    box-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.08);\n    border-radius: 2px;\n    margin: 8px auto;\n    text-decoration: none;\n}\n\n/*\tMaking the form responsive. Remove these media queries\n    if you don't need the form to work on mobile devices. */\n\n@media (max-width: 900px) {\n\n    .form-register{\n        margin: 20px auto;\n    }\n\n    .form-register-with-email{\n        position: relative;\n        display: block;\n        margin: 0;\n    }\n\n    .form-register-with-email .form-white-background{\n        margin: 0 auto 32px;\n    }\n\n\n\n    .form-sign-in-with-social {\n        margin-top: 105px;\n    }\n\n}\n\n@media (max-width: 600px) {\n\n    .form-register-with-email .form-white-background{\n        width: 300px;\n        padding-left: 35px;\n        padding-right: 35px;\n    }\n\n    .form-register-with-email .form-row > label span{\n        display: block;\n        text-align: left;\n        padding: 0 0 10px;\n    }\n\n    .form-register-with-email input{\n        display: block;\n        margin: 0 auto;\n    }\n\n    .form-register-with-email .form-checkbox input{\n        display: inline-block;\n        margin-left: 0;\n    }\n\n    .form-register-with-email .form-checkbox span{\n        width: 200px !important;\n    }\n\n    .form-register-with-email:after{\n        bottom: -80px;\n        left: 50%;\n        margin-left: -25px;\n    }\n\n}\n</style>",
+        "x": 540,
+        "y": 120,
+        "wires": [
+            [
+                "e2418d96.a8aff"
+            ]
+        ]
+    },
+    {
+        "id": "42277078.1a864",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "CSS Style",
+        "field": "payload.css",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<style>\nhtml{\n    background-color: #f3f3f3;\n}\n\n.form-register{\n    max-width: 1000px;\n    width: 100%;\n    margin: 0 auto;\n\n    font: bold 14px sans-serif;\n    text-align: center;\n}\n\n.form-register-with-email{\n    position: relative;\n    display: inline-block;\n    vertical-align: top;\n    margin-right: 130px;\n    text-align: center;\n}\n\n.form-register-with-email .form-white-background{\n    width: 570px;\n    box-sizing: border-box;\n    background-color: #ffffff;\n    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);\n    padding: 60px 80px;\n    margin-bottom: 35px;\n}\n\n.form-register-with-email .form-row{\n    text-align: left;\n    margin-bottom: 23px;\n}\n\n.form-register-with-email .form-title-row{\n    text-align: center;\n    margin-bottom: 50px;\n}\n\n.form-register-with-email h1{\n    display: inline-block;\n    box-sizing: border-box;\n    color:  #4c565e;\n    font-size: 24px;\n    padding: 0 20px 15px;\n    border-bottom: 2px solid #6caee0;\n    margin: 0;\n}\n\n.form-register-with-email .form-row > label span{\n    display: inline-block;\n    box-sizing: border-box;\n    color:  #5f5f5f;\n    width: 125px;\n    text-align: right;\n    padding-right: 25px;\n}\n\n.form-register-with-email input{\n    color:  #5f5f5f;\n    box-sizing: border-box;\n    width: 230px;\n    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);\n    padding: 12px 18px;\n    border: 1px solid #dbdbdb;\n}\n\n.form-register-with-email .form-checkbox input{\n    margin-left: 128px;\n    margin-right: 10px;\n    width: auto;\n    vertical-align: top;\n}\n\n.form-register-with-email .form-row .form-checkbox span{\n    font-size: 12px;\n    font-weight: normal;\n    display: inline-block;\n    text-align: left;\n    width: 220px;\n    margin: 0;\n}\n\n.form-register-with-email .form-checkbox span a{\n    text-decoration: none;\n    color:  #6caee0;\n}\n\n.form-register-with-email button{\n    display: block;\n    border-radius: 2px;\n    background-color:  #6caee0;\n    color: #ffffff;\n    font-weight: bold;\n    box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);\n    padding: 15px 35px;\n    border: 0;\n    margin: 55px auto 0;\n    cursor: pointer;\n}\n\n.form-register-with-email .form-log-in-with-existing{\n    text-decoration: none;\n    padding: 4px 8px;\n    font-weight: normal;\n    color: #7b9d62;\n    background-color: #d6f0c3;\n}\n\n\n.form-sign-in-with-social{\n    display: inline-block;\n    max-width: 180px;\n    box-sizing: border-box;\n    vertical-align: top;\n    text-align: center;\n    margin-top: 100px;\n}\n\n.form-sign-in-with-social .form-title-row{\n    margin-bottom: 50px;\n}\n\n.form-sign-in-with-social .form-title{\n    box-sizing: border-box;\n    color:  #4c565e;\n    font-size: 24px;\n    padding: 15px 20px;\n    border-bottom: 2px solid #6caee0;\n}\n\n.form-sign-in-with-social .form-google-button{\n    color:  #ffffff;\n    display: block;\n    width: 145px;\n    height: 40px;\n    font-size: 12px;\n    line-height: 40px;\n    background-color:  rgba(222, 110, 60, 0.9);\n    box-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.08);\n    border-radius: 2px;\n    margin: 8px auto;\n    text-decoration: none;\n}\n\n.form-sign-in-with-social .form-facebook-button{\n    color:  #ffffff;\n    display: block;\n    width: 145px;\n    height: 40px;\n    font-size: 12px;\n    line-height: 40px;\n    background-color:  rgba(75, 136, 194, 0.9);\n    box-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.08);\n    border-radius: 2px;\n    margin: 8px auto;\n    text-decoration: none;\n}\n\n.form-sign-in-with-social .form-twitter-button{\n    color:  #ffffff;\n    display: block;\n    width: 145px;\n    height: 40px;\n    font-size: 12px;\n    line-height: 40px;\n    background-color:  rgba(123, 195, 226, 0.9);\n    box-shadow: 1px 2px 2px 0 rgba(0, 0, 0, 0.08);\n    border-radius: 2px;\n    margin: 8px auto;\n    text-decoration: none;\n}\n\n/*\tMaking the form responsive. Remove these media queries\n    if you don't need the form to work on mobile devices. */\n\n@media (max-width: 900px) {\n\n    .form-register{\n        margin: 20px auto;\n    }\n\n    .form-register-with-email{\n        position: relative;\n        display: block;\n        margin: 0;\n    }\n\n    .form-register-with-email .form-white-background{\n        margin: 0 auto 32px;\n    }\n\n\n\n    .form-sign-in-with-social {\n        margin-top: 105px;\n    }\n\n}\n\n@media (max-width: 600px) {\n\n    .form-register-with-email .form-white-background{\n        width: 300px;\n        padding-left: 35px;\n        padding-right: 35px;\n    }\n\n    .form-register-with-email .form-row > label span{\n        display: block;\n        text-align: left;\n        padding: 0 0 10px;\n    }\n\n    .form-register-with-email input{\n        display: block;\n        margin: 0 auto;\n    }\n\n    .form-register-with-email .form-checkbox input{\n        display: inline-block;\n        margin-left: 0;\n    }\n\n    .form-register-with-email .form-checkbox span{\n        width: 200px !important;\n    }\n\n    .form-register-with-email:after{\n        bottom: -80px;\n        left: 50%;\n        margin-left: -25px;\n    }\n\n}\n</style>",
+        "x": 540,
+        "y": 440,
+        "wires": [
+            [
+                "402303ef.93bfac"
+            ]
+        ]
+    },
+    {
+        "id": "45b70f78.1e904",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "CSS Style",
+        "field": "payload.css",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<style type=\"text/css\">\n.container{\n    max-width: 500px;\n    padding: 10px 20px;\n    background: #f4f7f8;\n    margin: 10px auto;\n    padding: 20px;\n    background: #f4f7f8;\n    border-radius: 8px;\n    font-family: Georgia, \"Times New Roman\", Times, serif;\n}\n</style>",
+        "x": 540,
+        "y": 580,
+        "wires": [
+            [
+                "bedb0afb.ec5078"
+            ]
+        ]
+    },
+    {
+        "id": "11fa0bce.4d8b04",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "CSS Style",
+        "field": "payload",
+        "format": "html",
+        "template": "<style type=\"text/css\">\n.container{\n    max-width: 500px;\n    padding: 10px 20px;\n    background: #f4f7f8;\n    margin: 10px auto;\n    padding: 20px;\n    background: #f4f7f8;\n    border-radius: 8px;\n    font-family: Georgia, \"Times New Roman\", Times, serif;\n}\n</style>",
+        "x": 540,
+        "y": 800,
+        "wires": [
+            [
+                "60902bb6.127824"
+            ]
+        ]
+    },
+    {
+        "id": "4132aed4.de20c",
+        "type": "template",
+        "z": "8b7d1426.191098",
+        "name": "CSS Style",
+        "field": "payload",
+        "format": "html",
+        "template": "<style type=\"text/css\">\n.container{\n    max-width: 500px;\n    padding: 10px 20px;\n    background: #f4f7f8;\n    margin: 10px auto;\n    padding: 20px;\n    background: #f4f7f8;\n    border-radius: 8px;\n    font-family: Georgia, \"Times New Roman\", Times, serif;\n}\n</style>",
+        "x": 540,
+        "y": 920,
+        "wires": [
+            [
+                "c9c1800c.4903e"
+            ]
+        ]
+    },
+    {
+        "id": "c2caf2cb.29f",
+        "type": "comment",
+        "z": "8b7d1426.191098",
+        "name": "Supporting Pages",
+        "info": "",
+        "x": 95,
+        "y": 689,
+        "wires": []
+    },
+    {
+        "id": "b89f2696.c532b8",
+        "type": "debug",
+        "z": "8b7d1426.191098",
+        "name": "Process Login",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 740,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "33056276.42c17e",
+        "type": "inject",
+        "z": "b183d48e.4f3bf8",
+        "name": "Create Admin",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 110,
+        "y": 460,
+        "wires": [
+            [
+                "b17f329.16a49d"
+            ]
+        ]
+    },
+    {
+        "id": "cc22aa8b.ee7638",
+        "type": "http request",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "url": "",
+        "tls": "",
+        "x": 810,
+        "y": 500,
+        "wires": [
+            [
+                "77c6838d.10197c",
+                "7db7fe0b.0a474",
+                "9fc1c860.8d8708"
+            ]
+        ]
+    },
+    {
+        "id": "77c6838d.10197c",
+        "type": "debug",
+        "z": "b183d48e.4f3bf8",
+        "name": "Create Meraki Admin",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 800,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "d0bb0446.d59968",
+        "type": "http in",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "url": "/meraki/admins",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 110,
+        "y": 220,
+        "wires": [
+            [
+                "6400ac17.7ad084"
+            ]
+        ]
+    },
+    {
+        "id": "6400ac17.7ad084",
+        "type": "function",
+        "z": "b183d48e.4f3bf8",
+        "name": "msg.url = \"/meraki/newAdmin\";",
+        "func": "msg.url = \"/meraki/newAdmin\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 450,
+        "y": 220,
+        "wires": [
+            [
+                "4a1fef46.25814"
+            ]
+        ]
+    },
+    {
+        "id": "49a4e557.0d98ac",
+        "type": "template",
+        "z": "b183d48e.4f3bf8",
+        "name": "CSS",
+        "field": "payload.style",
+        "fieldType": "msg",
+        "format": "css",
+        "syntax": "mustache",
+        "template": "input[type=text], select {\n    width: 100%;\n    padding: 12px 20px;\n    margin: 8px 0;\n    display: inline-block;\n    border: 1px solid #ccc;\n    border-radius: 4px;\n    box-sizing: border-box;\n}\n\ninput[type=email], select {\n    width: 100%;\n    padding: 12px 20px;\n    margin: 8px 0;\n    display: inline-block;\n    border: 1px solid #ccc;\n    border-radius: 4px;\n    box-sizing: border-box;\n}\n\ninput[type=submit] {\n    width: 50%;\n    background-color: #4CAF50;\n    color: white;\n    padding: 14px 20px;\n    margin: 8px 0;\n    border: none;\n    border-radius: 4px;\n    cursor: pointer;\n}\n\ninput[type=submit]:hover {\n    background-color: #45a049;\n}\n\ndiv form {\n    border-radius: 5px;\n    background-color: #f2f2f2;\n    padding: 20px;\n}\n\n.adminform {\n    width: 90%;\n}\n",
+        "x": 370,
+        "y": 300,
+        "wires": [
+            [
+                "8bf9286b.9ffd98"
+            ]
+        ]
+    },
+    {
+        "id": "4a1fef46.25814",
+        "type": "template",
+        "z": "b183d48e.4f3bf8",
+        "name": "JavaScript",
+        "field": "payload.script",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "mustache",
+        "template": "\n$(document).ready(function(e) {\n    \n    \n    $.ajax({\n        url: 'api/organizations',\n        type: 'get',\n        datatype: 'json',\n        success: function(data){\n            var toAppend = '';\n            //if(typeof data === 'object'){\n                for(var i=0;i<data.length;i++){\n                    toAppend += '<option value='+data[i][\"id\"]+'>'+data[i]['name']+'</option>';\n                }\n            //}\n            console.log(\"orgs toAppend\",toAppend);\n            $('#orgs').append(toAppend);\n        }\n    });\n    \n    $(\"form[ajax=true]\").submit(function(e) {\n        \n        e.preventDefault();\n        \n        var form_data = $(this).serialize();\n        var form_url = $(this).attr(\"action\");\n        var form_method = $(this).attr(\"method\").toUpperCase();\n        \n        var orgId = $(\"#orgs\").val();\n        \n        $(\"#loadingimg\").show();\n        \n        $.ajax({\n            url: form_url+\"/\"+orgId, \n            type: form_method,       \n            data: form_data,     \n            cache: false,\n            success: function(data){\n                \n                // Create simple HTML response\n                var response = \n                    \"<div>\"+\n                        \"<h2>Created Admin!</h2>\"+\n                        \"<h4>Name</h4><p>\"+data.name+\"</p>\"+\n                        \"<h4>E-Mail</h4><p>\"+data.email+\"</p>\"+\n                        \"<h4>ID</h4><p>\"+data.id+\"</p>\"+\n                        \"<h4>Tags</h4><p>\"+data.tags+\"</p>\"+\n                        \"<h4>Org Access</h4><p>\"+data.orgAccess+\"</p>\"+\n                    \"</div>\";\n                \n                console.log(\"response: \"+JSON.stringify(data));\n                \n                \n                $(\"#result\").html(response); \n                \n                $(\"#loadingimg\").hide();\n                $( '#createadmin' ).each(function(){\n                    this.reset();\n                });\n            },\n            error: function(error){\n                $(\"#result\").html(error.responseText);\n            }\n        });    \n        \n    });\n    \n});",
+        "x": 390,
+        "y": 260,
+        "wires": [
+            [
+                "49a4e557.0d98ac"
+            ]
+        ]
+    },
+    {
+        "id": "fdd5fdf0.765d3",
+        "type": "comment",
+        "z": "b183d48e.4f3bf8",
+        "name": "Create Admin Form",
+        "info": "",
+        "x": 110,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "a7436010.ad91f",
+        "type": "comment",
+        "z": "b183d48e.4f3bf8",
+        "name": "Form Submission URL",
+        "info": "",
+        "x": 420,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "f9f28753.a075f8",
+        "type": "http response",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "x": 710,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "8bf9286b.9ffd98",
+        "type": "template",
+        "z": "b183d48e.4f3bf8",
+        "name": "HTML",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<html>\n  <head>\n    <title>Meraki Dasbhoard API - Admin User</title>\n    <meta name=\"viewport\" content=\"initial-scale=1.0, user-scalable=no\">\n    <meta charset=\"utf-8\">\n    <!--\n    <script src=\"http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js\"></script>\n    -->\n    <script\n      src=\"https://code.jquery.com/jquery-3.2.1.min.js\"\n      integrity=\"sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=\"\n      crossorigin=\"anonymous\"></script>\n      \n    <link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\">  \n    <script>{{{payload.jquery}}}</script>\n    <style>{{{payload.style}}}</style>\n  </head>\n  \n<div class=\"container\">\n    <h2>Create a Meraki Dashboard Administrator</h2>\n    <h4><a href=\"http://developers.meraki.com\">Meraki Developers Portal</a></h4>\n\n<div class=\"col-md-6\">\n<div class=\"adminform\">\n  <form id=\"createadmin\" method=\"post\" action=\"{{url}}\" ajax=\"true\">\n    <select id=\"orgs\" name=\"orgs\">\n        <option>Select Organization..</option>\n    </select>\n    <label>Contact Details</label>\n    <input type=\"text\" id=\"fname\" name=\"firstname\" placeholder=\"First Name\" required=true/>\n    <input type=\"text\" id=\"lname\" name=\"lastname\" placeholder=\"Last Name\" required=true/>\n    <input type=\"email\" id=\"email\" name=\"email\" placeholder=\"E-mail\" required=true/>\n    <br>\n\n    <label>Organization Permissions</label>\n    <select id=\"orgAccess\" name=\"orgAccess\" placeholder=\"Org Access\">\n      <option value=\"full\">full</option>\n      <option value=\"read-only\">read-only</option>\n    </select>\n    \n  \n    <input type=\"submit\" class=\"button\" value=\"Submit\">\n  </form>\n</div>\n</div>\n\n<div class=\"col-md-6\">\n    <span id=\"result\"></span>\n</div>\n</div>\n</body>\n</html>\n<script>{{{payload.script}}}</script>",
+        "x": 370,
+        "y": 340,
+        "wires": [
+            [
+                "f9f28753.a075f8"
+            ]
+        ]
+    },
+    {
+        "id": "b17f329.16a49d",
+        "type": "function",
+        "z": "b183d48e.4f3bf8",
+        "name": "Sample Data",
+        "func": "msg.payload = {\n    \"name\": \"NodeRED Test\",\n    \"email\": \"cory@internetoflego.com\",\n    \"orgAccess\": \"full\"\n };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 390,
+        "y": 460,
+        "wires": [
+            [
+                "669cc1e0.49e18"
+            ]
+        ]
+    },
+    {
+        "id": "84449400.153a6",
+        "type": "http in",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "url": "/meraki/newAdmin/:orgId",
+        "method": "post",
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 500,
+        "wires": [
+            [
+                "c824fa64.cd41a8"
+            ]
+        ]
+    },
+    {
+        "id": "7db7fe0b.0a474",
+        "type": "http response",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "x": 990,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "c824fa64.cd41a8",
+        "type": "function",
+        "z": "b183d48e.4f3bf8",
+        "name": "form data",
+        "func": "// Convert form data into Meraki API expected JSON\nmsg.orgId = msg.req.params.orgId;\nmsg.payload = {\n    name: msg.req.body.firstname + \" \" + msg.req.body.lastname,\n    email: msg.req.body.email,\n    orgAccess: msg.req.body.orgAccess\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 380,
+        "y": 500,
+        "wires": [
+            [
+                "8c5e487c.5f8d58",
+                "669cc1e0.49e18"
+            ]
+        ]
+    },
+    {
+        "id": "8c5e487c.5f8d58",
+        "type": "debug",
+        "z": "b183d48e.4f3bf8",
+        "name": "newAdmin Form Data",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 296.5555725097656,
+        "y": 558.6666631698608,
+        "wires": []
+    },
+    {
+        "id": "4bd60933.38ce78",
+        "type": "comment",
+        "z": "b183d48e.4f3bf8",
+        "name": "Meraki Dashboard API Sample App",
+        "info": "Create a Meraki Dasbhoard Admin with a form.\n\nTo open the web form, navigate to \n\nhttp://yourserver:1880/meraki/admins\n",
+        "x": 459,
+        "y": 24.000003814697266,
+        "wires": []
+    },
+    {
+        "id": "b9cd2e1a.0cff3",
+        "type": "inject",
+        "z": "b183d48e.4f3bf8",
+        "name": "List Organizations",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 130,
+        "y": 660,
+        "wires": [
+            [
+                "1f7f0ca4.b8a9e3"
+            ]
+        ]
+    },
+    {
+        "id": "1f7f0ca4.b8a9e3",
+        "type": "function",
+        "z": "b183d48e.4f3bf8",
+        "name": "Meraki API - List Organizations",
+        "func": "// Set Variables\nvar apiKey = global.get('apiKey');\n\n\n\n// API Call\nmsg.headers = {\n    \"X-Cisco-Meraki-API-Key\": apiKey\n};\n\nmsg.url = \"https://dashboard.meraki.com/api/v0/organizations\";\nmsg.method = 'get';\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 430,
+        "y": 660,
+        "wires": [
+            [
+                "b0fc655c.2d8548"
+            ]
+        ]
+    },
+    {
+        "id": "b0fc655c.2d8548",
+        "type": "http request",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "method": "use",
+        "ret": "txt",
+        "url": "",
+        "tls": "",
+        "x": 670,
+        "y": 660,
+        "wires": [
+            [
+                "7a923fff.acb17"
+            ]
+        ]
+    },
+    {
+        "id": "2b7eaf45.a4e34",
+        "type": "http in",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "url": "/meraki/api/organizations",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 700,
+        "wires": [
+            [
+                "1f7f0ca4.b8a9e3"
+            ]
+        ]
+    },
+    {
+        "id": "7a923fff.acb17",
+        "type": "function",
+        "z": "b183d48e.4f3bf8",
+        "name": "Large Int Helper",
+        "func": "// Convert the org number to a string so that it does not become corrupted \n// when the JSON conversion happens.   \nmsg.payload = msg.payload.replace(/\"id\":(.*?)(?:,)/g,\"\\\"id\\\"\\:\\\"$1\\\"\\,\");\nconsole.log(\"new json with regex replace \",msg.payload);\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 860,
+        "y": 660,
+        "wires": [
+            [
+                "acdff948.7d7588"
+            ]
+        ]
+    },
+    {
+        "id": "acdff948.7d7588",
+        "type": "json",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "x": 830,
+        "y": 700,
+        "wires": [
+            [
+                "b69f893b.0e4d68",
+                "7dcad530.2f921c"
+            ]
+        ]
+    },
+    {
+        "id": "b69f893b.0e4d68",
+        "type": "http response",
+        "z": "b183d48e.4f3bf8",
+        "name": "",
+        "x": 1030,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "7dcad530.2f921c",
+        "type": "debug",
+        "z": "b183d48e.4f3bf8",
+        "name": "List Orgs JSON",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 1000,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "93202e68.91ca2",
+        "type": "inject",
+        "z": "b183d48e.4f3bf8",
+        "name": "Sets Defaults - Injected at start",
+        "topic": "",
+        "payload": "Setting Environment Variables",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "x": 170,
+        "y": 60,
+        "wires": [
+            [
+                "ccf4fa94.c11d98"
+            ]
+        ]
+    },
+    {
+        "id": "ccf4fa94.c11d98",
+        "type": "function",
+        "z": "b183d48e.4f3bf8",
+        "name": "Env Variables: UPDATE THIS",
+        "func": "//  ###### User Defined Variables ######\n\nconst API_KEY = 'YourAPIkey'; //Your API KEY (Keep this secret. Do not publish)\nvar shard = 'n###'; // https://n149.meraki.com , where n149 represent the shard number. This is defined to avoid redirect issues.\nvar orgId = 'YourOrgId'; // Your default Organization ID\n\n\n\n\n\n// ###### Set and Get Global variables ######\n\n\n// Assign to Global Context \nglobal.set('apiKey', API_KEY); // pulling API key via \"secret\" node. This avoides publishing the API key when sharing the flow\nglobal.set('shard', shard);\n\nglobal.set('orgId', orgId);\n\n\nmsg.payload = \"settings set\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 440,
+        "y": 60,
+        "wires": [
+            [
+                "60eb5a52.57d6c4"
+            ]
+        ]
+    },
+    {
+        "id": "60eb5a52.57d6c4",
+        "type": "debug",
+        "z": "b183d48e.4f3bf8",
+        "name": "Flow Env Variables",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 750,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "669cc1e0.49e18",
+        "type": "function",
+        "z": "b183d48e.4f3bf8",
+        "name": "Meraki API - Create Admin",
+        "func": "// Set Variables\nvar apiKey = global.get('apiKey');\nvar shard = global.get('shard');\n//var orgId = global.get('orgId'); // set via global variables\nvar orgId = msg.orgId; //set via request parameter\n\n// API Call\nmsg.headers = {\n    \"X-Cisco-Meraki-API-Key\": apiKey\n};\nmsg.url = \"https://\"+shard+\".meraki.com/api/v0/organizations/\"+orgId+\"/admins\";\nmsg.method = 'post';\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 600,
+        "y": 500,
+        "wires": [
+            [
+                "cc22aa8b.ee7638"
+            ]
+        ]
+    },
+    {
+        "id": "edadd60e.014e38",
+        "type": "comment",
+        "z": "b183d48e.4f3bf8",
+        "name": "APIs",
+        "info": "",
+        "x": 70,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "c94be374.17436",
+        "type": "link out",
+        "z": "8b7d1426.191098",
+        "name": "excapClick Login",
+        "links": [
+            "bc43f620.69aed8",
+            "a0db5d0c.f3bdd"
+        ],
+        "x": 395,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "9d817c75.d7548",
+        "type": "http request",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "method": "use",
+        "ret": "txt",
+        "url": "",
+        "tls": "",
+        "x": 530,
+        "y": 140,
+        "wires": [
+            [
+                "bdbbcd02.1c10d"
+            ]
+        ]
+    },
+    {
+        "id": "27df499.98dd7b6",
+        "type": "function",
+        "z": "e1f94d4.d4632b",
+        "name": "Spark Send Message (API) - UPDATE",
+        "func": "// ******************\n// Set Your Variables\n// ******************\nvar accessToken = \"EnterYourAccessTokenHere\"; // Your Access Token\nvar roomId = \"EnterYourRoomIDHere\"; // Your Room ID\n\n// -- -- -- -- -- --\n// Build API Call\nmsg.url = \"https://api.ciscospark.com/v1/messages\";\nmsg.headers = { \n    'content-type': 'application/json',\n    'authorization': 'Bearer '+ accessToken \n};\nmsg.payload ={ \n    roomId: roomId,\n    markdown: msg.payload \n}\nmsg.method = \"post\";\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 270,
+        "y": 140,
+        "wires": [
+            [
+                "9d817c75.d7548"
+            ]
+        ]
+    },
+    {
+        "id": "3ca6364c.b7621a",
+        "type": "inject",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 100,
+        "y": 240,
+        "wires": [
+            [
+                "9a0bf2e3.1eda5"
+            ]
+        ]
+    },
+    {
+        "id": "bdbbcd02.1c10d",
+        "type": "debug",
+        "z": "e1f94d4.d4632b",
+        "name": "Spark Message",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 740,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "16c51ccf.3bcb43",
+        "type": "link in",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "caa63fd2.c44a"
+        ],
+        "x": 255,
+        "y": 480,
+        "wires": [
+            [
+                "25a3d134.5338fe"
+            ]
+        ]
+    },
+    {
+        "id": "45c2e5d.feac61c",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "Cisco Spark API Examples - README",
+        "info": "These sample flows simply take the results from\nthe linked sample flows, formats them and sends a message\nto a Cisco Spark room.\n\nUpdate the Spark API function with your `roomID`\nand your `accessToken`. These can be found on \nthe developers portal for Cisco Spark.\n\nThe `accessToken` can be found in the portal by\nclicking on your profile icon in the top right.\nCopy this token into the function variable.\n\nExample Token\n`ZGJjNzI0ODAtNmEwNS00YjU3LTkzOTYtMjthisisbogushmOWI3M2IyZGI4NzctZDVh`\n\n*API to List Rooms*\nhttps://developer.ciscospark.com/endpoint-rooms-get.html\n- you will get your roomId by running this call\nusing their \"Test Mode\", which will run the command\nand the resulting JSON will appear with the \nid, name, etc. Copy the `id` value into the function variable.\n`\n{\n\t\t\t\"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNWExMjhhNTAtNTExZi0xMWU3LTk2NTctYjMzNWEyNmMzYmVj\",\n\t\t\t\"title\": \"Node-RED Testing Sandbox\",\n\t\t\t\"type\": \"group\",\n\t\t\t\"isLocked\": false,\n\t\t\t\"lastActivity\": \"2017-06-14T20:21:09.726Z\",\n\t\t\t\"creatorId\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS80ZjY4OWNhZS1mYjNlLTRjNDEtODM3OC1hYmY1Mjc2Y2RmMzQ\",\n\t\t\t\"created\": \"2017-06-14T16:34:35.509Z\"\n\t\t}\n`\n\n*API to Send a Message*\nhttps://developer.ciscospark.com/endpoint-messages-post.html\n",
+        "x": 430,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "f6c7b810.d18bc8",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "Captive Portal Login Notification",
+        "info": "",
+        "x": 150,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "9fc1c860.8d8708",
+        "type": "link out",
+        "z": "b183d48e.4f3bf8",
+        "name": "Create Meraki Admin",
+        "links": [
+            "193950a2.f7956f"
+        ],
+        "x": 955,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "193950a2.f7956f",
+        "type": "link in",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "9fc1c860.8d8708"
+        ],
+        "x": 255,
+        "y": 400,
+        "wires": [
+            [
+                "40abdb8f.71ab44",
+                "7db08d9e.bd8284"
+            ]
+        ]
+    },
+    {
+        "id": "40abdb8f.71ab44",
+        "type": "function",
+        "z": "e1f94d4.d4632b",
+        "name": "Format Message",
+        "func": "var admin = msg.payload;\n\nmsg.payload = \"## New Admin Created! \\n\" +\n    admin.name + \" \" + admin.email + \"   **Access**: \"+admin.orgAccess;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 410,
+        "y": 400,
+        "wires": [
+            [
+                "6cc7d317.ef7d9c"
+            ]
+        ]
+    },
+    {
+        "id": "a0db5d0c.f3bdd",
+        "type": "link in",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "c94be374.17436"
+        ],
+        "x": 255,
+        "y": 320,
+        "wires": [
+            [
+                "47ac5bb7.8e78c4"
+            ]
+        ]
+    },
+    {
+        "id": "47ac5bb7.8e78c4",
+        "type": "function",
+        "z": "e1f94d4.d4632b",
+        "name": "Format Message",
+        "func": "\nvar client = msg.payload;\n\nmsg.payload = \"## New WiFi Client Joined! \\n\" +\n    client.name + \" \" + client.email;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 410,
+        "y": 320,
+        "wires": [
+            [
+                "380881ab.12ee0e"
+            ]
+        ]
+    },
+    {
+        "id": "b27b11aa.a0afa",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "Test Timestamp",
+        "info": "",
+        "x": 100,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "7d0b79e3.ba7b48",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "Dashboard API Admin Creation",
+        "info": "",
+        "x": 150,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "a899ea44.532388",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "Location API Notification",
+        "info": "",
+        "x": 130,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "c332bb33.776ee8",
+        "type": "link out",
+        "z": "eb14d871.d82a88",
+        "name": "Location API All Data",
+        "links": [
+            "dca8ec9b.06c7a"
+        ],
+        "x": 555,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "3d1eeec3.7be0b2",
+        "type": "comment",
+        "z": "eb14d871.d82a88",
+        "name": "Workflow Example",
+        "info": "",
+        "x": 110,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "4ce12666.45e838",
+        "type": "debug",
+        "z": "eb14d871.d82a88",
+        "name": "WiFi Device",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 610,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "f7986455.2be3d8",
+        "type": "http in",
+        "z": "eb14d871.d82a88",
+        "name": "",
+        "url": "/scanning",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 220,
+        "wires": [
+            [
+                "f65789c5.ba80f8",
+                "1e6cb2e3.d893cd"
+            ]
+        ]
+    },
+    {
+        "id": "dca8ec9b.06c7a",
+        "type": "link in",
+        "z": "eb14d871.d82a88",
+        "name": "",
+        "links": [
+            "c332bb33.776ee8"
+        ],
+        "x": 55,
+        "y": 440,
+        "wires": [
+            [
+                "7a39f318.6af4cc"
+            ]
+        ]
+    },
+    {
+        "id": "caa63fd2.c44a",
+        "type": "link out",
+        "z": "eb14d871.d82a88",
+        "name": "BLE Location API",
+        "links": [
+            "16c51ccf.3bcb43"
+        ],
+        "x": 555,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "cfd0bbc0.254a98",
+        "type": "function",
+        "z": "eb14d871.d82a88",
+        "name": "WiFi Split observations",
+        "func": "// send individual observation items to next node\nvar data = msg.payload.data;\n\nfor (i = 0; i < data.observations.length; i++) { \n    msg.payload = data.observations[i];\n    node.send(msg);\n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 360,
+        "y": 400,
+        "wires": [
+            [
+                "4ce12666.45e838",
+                "63e8cd56.bf7714"
+            ]
+        ]
+    },
+    {
+        "id": "7a39f318.6af4cc",
+        "type": "switch",
+        "z": "eb14d871.d82a88",
+        "name": "WiFi or BLE",
+        "property": "payload.type",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "DevicesSeen",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "BluetoothDevicesSeen",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 2,
+        "x": 170,
+        "y": 440,
+        "wires": [
+            [
+                "cfd0bbc0.254a98"
+            ],
+            [
+                "384a84e6.2a472c"
+            ]
+        ]
+    },
+    {
+        "id": "384a84e6.2a472c",
+        "type": "function",
+        "z": "eb14d871.d82a88",
+        "name": "BLE Split observations",
+        "func": "// send individual observation items to next node\nvar data = msg.payload.data;\n\nfor (i = 0; i < data.observations.length; i++) { \n    msg.payload = data.observations[i];\n    node.send(msg);\n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 360,
+        "y": 480,
+        "wires": [
+            [
+                "caa63fd2.c44a",
+                "2dbbfb1c.49e4c4"
+            ]
+        ]
+    },
+    {
+        "id": "2dbbfb1c.49e4c4",
+        "type": "debug",
+        "z": "eb14d871.d82a88",
+        "name": "BLE Device",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 610,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "63e8cd56.bf7714",
+        "type": "link out",
+        "z": "eb14d871.d82a88",
+        "name": "WiFi Location API",
+        "links": [
+            "963cf91f.0c6798"
+        ],
+        "x": 555,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "ec389469.821cd8",
+        "type": "switch",
+        "z": "e1f94d4.d4632b",
+        "name": "Search VIP Client- UPDATE",
+        "property": "payload.clientMac",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "cont",
+                "v": "74:da:38:56:0a:80",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 1,
+        "x": 420,
+        "y": 580,
+        "wires": [
+            [
+                "e3ab8bc3.28b658"
+            ]
+        ]
+    },
+    {
+        "id": "963cf91f.0c6798",
+        "type": "link in",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "63e8cd56.bf7714"
+        ],
+        "x": 255,
+        "y": 540,
+        "wires": [
+            [
+                "14a418d5.901717",
+                "ec389469.821cd8"
+            ]
+        ]
+    },
+    {
+        "id": "14a418d5.901717",
+        "type": "function",
+        "z": "e1f94d4.d4632b",
+        "name": "Format Message",
+        "func": "// Write a message with Markdown and include the Google Maps encoded URL.\n// http://maps.google.com/maps?t=h&q=loc:35.487895,-87.332414&z=17 \nvar device = msg.payload;\nvar manufacturer = device.manufacturer || \"\"; // display manufacturer only if it is known\n\nmsg.payload = \"## WiFi Device Found! \\n\" +\n    \"####\"+ manufacturer + \"#### \\n\"+\n    \" **RSSI**:\" + device.rssi +\n    \" **MAC**: \" + device.clientMac +\n    \" [Map](https://maps.google.com/maps?t=h&q=loc:\"+device.location.lat +\",\"+ device.location.lng+\"&z=17)\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 690,
+        "y": 540,
+        "wires": [
+            [
+                "1ab5e1fb.42b56e"
+            ]
+        ]
+    },
+    {
+        "id": "3d5e6585.a704ca",
+        "type": "link in",
+        "z": "e1f94d4.d4632b",
+        "name": "Cisco Spark",
+        "links": [
+            "9a0bf2e3.1eda5",
+            "380881ab.12ee0e",
+            "6cc7d317.ef7d9c",
+            "8a307708.518d28",
+            "1ab5e1fb.42b56e",
+            "b35539f3.7883f8"
+        ],
+        "x": 75,
+        "y": 140,
+        "wires": [
+            [
+                "27df499.98dd7b6"
+            ]
+        ]
+    },
+    {
+        "id": "9a0bf2e3.1eda5",
+        "type": "link out",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "3d5e6585.a704ca"
+        ],
+        "x": 575,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "380881ab.12ee0e",
+        "type": "link out",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "3d5e6585.a704ca"
+        ],
+        "x": 575,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "6cc7d317.ef7d9c",
+        "type": "link out",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "3d5e6585.a704ca"
+        ],
+        "x": 575,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "8a307708.518d28",
+        "type": "link out",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "3d5e6585.a704ca"
+        ],
+        "x": 835,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "1ab5e1fb.42b56e",
+        "type": "link out",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "3d5e6585.a704ca"
+        ],
+        "x": 835,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "c9cf7f8e.a1bff",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "Send Message to Cisco Spark Room",
+        "info": "",
+        "x": 170,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "a2df11f4.06715",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "BLE",
+        "info": "",
+        "x": 170,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "1dd2cc7e.48d914",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "WiFi",
+        "info": "",
+        "x": 170,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "25a3d134.5338fe",
+        "type": "function",
+        "z": "e1f94d4.d4632b",
+        "name": "Format Message",
+        "func": "// Write a message with Markdown and include the Google Maps encoded URL.\n// http://maps.google.com/maps?t=h&q=loc:35.487895,-87.332414&z=17 \nvar device = msg.payload;\nmsg.payload = \"## BLE Device Found! \\n\" +\n    \" **RSSI**:\" + device.rssi +\n    \" **MAC**: \" + device.clientMac +\n    \" [Map](https://maps.google.com/maps?t=h&q=loc:\"+device.location.lat +\",\"+ device.location.lng+\"&z=17)\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 690,
+        "y": 480,
+        "wires": [
+            [
+                "8a307708.518d28"
+            ]
+        ]
+    },
+    {
+        "id": "e3ab8bc3.28b658",
+        "type": "function",
+        "z": "e1f94d4.d4632b",
+        "name": "Format Message",
+        "func": "// Write a message with Markdown and include the Google Maps encoded URL.\n// http://maps.google.com/maps?t=h&q=loc:35.487895,-87.332414&z=17 \nvar device = msg.payload;\nvar manufacturer = device.manufacturer || \"\"; // display manufacturer only if it is known\n\nmsg.payload = \"## VIP WiFi Device Found! \\n\" +\n    \"####\"+ manufacturer + \"#### \\n\"+\n    \" **RSSI**:\" + device.rssi +\n    \" **MAC**: \" + device.clientMac +\n    \" [Map](https://maps.google.com/maps?t=h&q=loc:\"+device.location.lat +\",\"+ device.location.lng+\"&z=17)\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 690,
+        "y": 580,
+        "wires": [
+            [
+                "b35539f3.7883f8"
+            ]
+        ]
+    },
+    {
+        "id": "b35539f3.7883f8",
+        "type": "link out",
+        "z": "e1f94d4.d4632b",
+        "name": "",
+        "links": [
+            "3d5e6585.a704ca"
+        ],
+        "x": 835,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "7db08d9e.bd8284",
+        "type": "debug",
+        "z": "e1f94d4.d4632b",
+        "name": "Admin Data",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 390,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "449dcd04.446754",
+        "type": "comment",
+        "z": "e1f94d4.d4632b",
+        "name": "Send Message to Cisco Spark Room",
+        "info": "",
+        "x": 170,
+        "y": 100,
+        "wires": []
+    }
+]
